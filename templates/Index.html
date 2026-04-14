@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>СКАТ-бот | Стратификация + несколько схем терапии</title>
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Roboto, system-ui; background: #eef2f5; margin: 0; padding: 20px; }
+        .container { max-width: 1300px; margin: 0 auto; background: white; border-radius: 28px; box-shadow: 0 12px 30px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: #0b3b4f; color: white; padding: 24px; text-align: center; }
+        .header h1 { margin: 0; font-size: 2rem; }
+        .sub { opacity: 0.9; margin-top: 8px; }
+        .tabs { display: flex; background: #f0f4f9; border-bottom: 1px solid #cfdfed; }
+        .tab { flex: 1; text-align: center; padding: 14px; cursor: pointer; font-weight: 600; color: #1e4a6e; transition: 0.2s; }
+        .tab.active { background: white; border-bottom: 3px solid #0b3b4f; color: #0b3b4f; }
+        .tab-content { display: none; padding: 28px; }
+        .tab-content.active { display: block; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-weight: 600; margin-bottom: 6px; color: #0b3b4f; }
+        select, input { width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 20px; font-size: 0.95rem; background: white; }
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; max-height: 180px; overflow-y: auto; background: #f9fbfd; padding: 8px; border-radius: 20px; }
+        .checkbox-group label { display: flex; align-items: center; gap: 6px; font-weight: normal; background: white; padding: 4px 12px; border-radius: 30px; border: 1px solid #cbd5e1; cursor: pointer; }
+        button { background: #0b3b4f; color: white; border: none; padding: 12px 28px; border-radius: 40px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; margin-right: 10px; }
+        button:hover { background: #1f5e7e; }
+        .copy-btn { background: #2c7da0; }
+        .copy-btn:hover { background: #1f5e7e; }
+        .result-card { background: #f8fafc; border-radius: 24px; padding: 20px; margin-top: 24px; border-left: 6px solid #0b3b4f; box-shadow: 0 2px 6px rgba(0,0,0,0.05); }
+        .warning { background: #fff3cd; border-left-color: #f7b32b; }
+        .error { background: #ffe6e5; border-left-color: #d9534f; }
+        .badge { background: #e2e8f0; border-radius: 50px; padding: 4px 10px; font-size: 0.75rem; display: inline-block; margin-right: 8px; }
+        hr { margin: 16px 0; }
+        footer { text-align: center; padding: 16px; font-size: 0.75rem; color: #5b6e8c; background: #f9fbfd; border-top: 1px solid #e2edf7; }
+        .scheme-list { list-style-type: none; padding-left: 0; }
+        .scheme-list li { margin-bottom: 12px; padding: 8px; background: #ffffff; border-radius: 16px; border: 1px solid #e2e8f0; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>💊 Чат-бот СКАТ | Стратификация + несколько схем</h1>
+        <div class="sub">Выбор интервалов, лабораторные маркеры, функция почек, SOFA, 3 линии терапии + альтернативы</div>
+    </div>
+    <div class="tabs">
+        <div class="tab active" data-tab="empiric">🦠 Эмпирическая терапия</div>
+        <div class="tab" data-tab="targeted">🔬 Целенаправленная (по возбудителю)</div>
+    </div>
+
+    <!-- Вкладка Эмпирическая -->
+    <div id="empiricTab" class="tab-content active">
+        <div class="form-grid">
+            <div class="form-group"><label>📍 Локализация</label>
+                <select id="localization">
+                    <option value="Пневмония">Пневмония</option>
+                    <option value="Интраабдоминальная инфекция">Интраабдоминальная инфекция</option>
+                    <option value="ИМВП">Инфекция мочевыводящих путей (ИМВП)</option>
+                    <option value="Сепсис">Сепсис</option>
+                </select>
+            </div>
+            <div class="form-group"><label>⏱️ Дни в стационаре</label>
+                <select id="hospitalDays">
+                    <option value="1">Менее 2 дней</option>
+                    <option value="5">2–7 дней</option>
+                    <option value="10">Более 7 дней</option>
+                </select>
+            </div>
+            <div class="form-group"><label>🧑 Возраст</label>
+                <select id="age">
+                    <option value="30">18–40 лет</option>
+                    <option value="60" selected>41–70 лет</option>
+                    <option value="80">Старше 70 лет</option>
+                </select>
+            </div>
+            <div class="form-group"><label>⚖️ Вес (кг)</label>
+                <select id="weight">
+                    <option value="50">50–59</option>
+                    <option value="70" selected>60–79</option>
+                    <option value="90">80–100</option>
+                </select>
+            </div>
+            <div class="form-group"><label>🧪 Креатинин (мкмоль/л)</label>
+                <select id="creatinine">
+                    <option value="60">Норма (<80)</option>
+                    <option value="120" selected>Умеренно повышен (80–150)</option>
+                    <option value="250">Значительно повышен (>150)</option>
+                </select>
+            </div>
+            <div class="form-group"><label>♂️ Пол</label>
+                <select id="sex"><option value="male">Мужской</option><option value="female">Женский</option></select>
+            </div>
+            <div class="form-group"><label>📊 SOFA (баллы)</label>
+                <select id="sofa">
+                    <option value="0">0–1 (низкий риск)</option>
+                    <option value="3" selected>2–5 (средний риск)</option>
+                    <option value="8">6–11 (высокий риск)</option>
+                    <option value="14">≥12 (очень высокий риск)</option>
+                </select>
+            </div>
+            <div class="form-group"><label>🩸 Лейкоциты (×10⁹/л)</label>
+                <select id="leukocytes">
+                    <option value="<4.0"><4.0</option>
+                    <option value="4.0-10.0" selected>4.0–10.0</option>
+                    <option value="10.0-15.0">10.0–15.0</option>
+                    <option value=">15.0">>15.0</option>
+                </select>
+            </div>
+            <div class="form-group"><label>🧪 СОЭ (мм/ч)</label>
+                <select id="esr">
+                    <option value="<10"><10</option>
+                    <option value="10-30" selected>10–30</option>
+                    <option value="30-60">30–60</option>
+                    <option value=">60">>60</option>
+                </select>
+            </div>
+            <div class="form-group"><label>🔬 Прокальцитонин (нг/мл)</label>
+                <select id="pct">
+                    <option value="<0.1"><0.1</option>
+                    <option value="0.1-0.25">0.1–0.25</option>
+                    <option value="0.25-0.5">0.25–0.5</option>
+                    <option value=">0.5" selected>>0.5</option>
+                </select>
+            </div>
+            <div class="form-group"><label>💊 Аллергия</label>
+                <select id="allergyEmp">
+                    <option value="нет">Нет</option>
+                    <option value="пенициллины">Пенициллины</option>
+                    <option value="цефалоспорины">Цефалоспорины</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group"><label>⚠️ Факторы риска</label><div id="riskFactorsList" class="checkbox-group"></div></div>
+        <div>
+            <button id="btnEmpiric">📋 Получить стратификацию и схемы</button>
+            <button id="copyResultBtn" class="copy-btn" style="display:none;">📋 Копировать результат</button>
+        </div>
+        <div id="resultEmpiric"></div>
+    </div>
+
+    <!-- Вкладка Целенаправленная -->
+    <div id="targetedTab" class="tab-content">
+        <div class="form-group"><label>🦠 Возбудитель</label>
+            <select id="pathogen">
+                <option value="E. coli (чувств.)">E. coli (чувствительная)</option>
+                <option value="E. coli (ESBL)">E. coli (ESBL)</option>
+                <option value="K. pneumoniae (ESBL)">K. pneumoniae (ESBL)</option>
+                <option value="P. aeruginosa (чувств.)">P. aeruginosa (чувствительная)</option>
+                <option value="P. aeruginosa (MDR)">P. aeruginosa (MDR)</option>
+                <option value="S. aureus (MRSA)">S. aureus (MRSA)</option>
+                <option value="S. aureus (MSSA)">S. aureus (MSSA)</option>
+            </select>
+        </div>
+        <div class="form-group"><label>📊 Группа риска</label>
+            <select id="riskGroup"><option value="">-- Авто --</option><option value="low_risk">Низкий риск</option><option value="late_nosocomial_mrsa">Риск МРЗС</option><option value="late_nosocomial_pseudomonas">Риск P. aeruginosa</option></select>
+        </div>
+        <div class="form-group"><label>🧪 Клиренс креатинина (мл/мин, опционально)</label><input type="number" id="crclTarget" placeholder="Оставьте пустым для авторасчёта"></div>
+        <div class="form-group"><label>💊 Аллергия</label>
+            <select id="allergyTar"><option value="нет">Нет</option><option value="пенициллины">Пенициллины</option><option value="цефалоспорины">Цефалоспорины</option></select>
+        </div>
+        <button id="btnTargeted">🎯 Подобрать по антибиотикограмме</button>
+        <div id="resultTargeted"></div>
+    </div>
+    <footer>Рекомендации основаны на локальных данных СКАТ. Всегда консультируйтесь с клиническим фармакологом.</footer>
+</div>
+
+<script>
+    // Загрузка факторов риска
+    fetch('/api/risk_factors')
+        .then(res => res.json())
+        .then(factors => {
+            const container = document.getElementById('riskFactorsList');
+            container.innerHTML = '';
+            factors.forEach(f => {
+                const label = document.createElement('label');
+                label.innerHTML = `<input type="checkbox" value="${f}"> ${f}`;
+                container.appendChild(label);
+            });
+        });
+
+    // Переключение вкладок
+    const tabs = document.querySelectorAll('.tab');
+    const contents = document.querySelectorAll('.tab-content');
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const target = tab.dataset.tab;
+            tabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            contents.forEach(c => c.classList.remove('active'));
+            document.getElementById(`${target}Tab`).classList.add('active');
+        });
+    });
+
+    let currentResultText = "";
+
+    // Эмпирический режим
+    document.getElementById('btnEmpiric').addEventListener('click', async () => {
+        const localization = document.getElementById('localization').value;
+        const hospitalDays = parseFloat(document.getElementById('hospitalDays').value);
+        const age = parseInt(document.getElementById('age').value);
+        const weight = parseFloat(document.getElementById('weight').value);
+        const creatinine = parseFloat(document.getElementById('creatinine').value);
+        const sex = document.getElementById('sex').value;
+        const sofa = parseInt(document.getElementById('sofa').value);
+        const leukocytes = document.getElementById('leukocytes').value;
+        const esr = document.getElementById('esr').value;
+        const pct = document.getElementById('pct').value;
+        const allergy = document.getElementById('allergyEmp').value;
+        const riskChecks = document.querySelectorAll('#riskFactorsList input:checked');
+        const riskFactors = Array.from(riskChecks).map(cb => cb.value);
+
+        const payload = { localization, hospital_days: hospitalDays, risk_factors: riskFactors, allergy, age, weight, serum_creatinine: creatinine, sex, sofa_score: sofa, leukocytes, esr, pct };
+        try {
+            const resp = await fetch('/api/empiric', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (data.error) { showResult('empiric', `Ошибка: ${data.error}`, 'error'); return; }
+            
+            let html = `<div class="result-card"><strong>🎯 СТРАТИФИКАЦИЯ:</strong> ${data.stratification}<br>`;
+            html += `<strong>🧪 Клиренс креатинина:</strong> ${data.crcl} мл/мин<br>`;
+            html += `<strong>📊 SOFA:</strong> ${data.sofa_score} баллов — ${data.sofa_interpretation}<br>`;
+            if(data.lab_interpretation.length) html += `<strong>🩸 Лабораторные маркеры:</strong><ul>${data.lab_interpretation.map(i=>`<li>${i}</li>`).join('')}</ul>`;
+            html += `<hr><strong>💊 НЕСКОЛЬКО СХЕМ АНТИБАКТЕРИАЛЬНОЙ ТЕРАПИИ:</strong><ul class="scheme-list">`;
+            html += `<li><strong>🔹 1-я линия:</strong> ${data.first_line}</li>`;
+            html += `<li><strong>🔸 2-я линия:</strong> ${data.second_line}</li>`;
+            html += `<li><strong>🔹 3-я линия:</strong> ${data.third_line || "—"}</li>`;
+            html += `<li><strong>⚠️ При аллергии:</strong> ${data.allergy_alternative || "—"}</li>`;
+            html += `<li><strong>🩺 При почечной недостаточности:</strong> ${data.renal_alternative || "—"}</li>`;
+            html += `</ul><strong>📌 Примечание:</strong> ${data.note}`;
+            if (data.allergy_warnings && data.allergy_warnings.length) {
+                html += `<div class="warning" style="margin-top:12px; padding:10px;">⚠️ ${data.allergy_warnings.join('; ')}</div>`;
+            }
+            html += `</div>`;
+            showResult('empiric', html, 'success');
+            // Сохраняем текст для копирования
+            currentResultText = `СТРАТИФИКАЦИЯ: ${data.stratification}\nКлиренс креатинина: ${data.crcl} мл/мин\nSOFA: ${data.sofa_score} баллов — ${data.sofa_interpretation}\nЛабораторные маркеры: ${data.lab_interpretation.join('; ')}\n\nСХЕМЫ ТЕРАПИИ:\n1-я линия: ${data.first_line}\n2-я линия: ${data.second_line}\n3-я линия: ${data.third_line || "—"}\nПри аллергии: ${data.allergy_alternative || "—"}\nПри почечной недостаточности: ${data.renal_alternative || "—"}\nПримечание: ${data.note}`;
+            document.getElementById('copyResultBtn').style.display = 'inline-block';
+        } catch(e) { showResult('empiric', 'Ошибка соединения', 'error'); }
+    });
+
+    // Целенаправленный режим
+    document.getElementById('btnTargeted').addEventListener('click', async () => {
+        const pathogen = document.getElementById('pathogen').value;
+        const riskGroup = document.getElementById('riskGroup').value;
+        const allergy = document.getElementById('allergyTar').value;
+        const crcl = document.getElementById('crclTarget').value;
+        const payload = { pathogen, risk_group: riskGroup, allergy, crcl: crcl ? parseFloat(crcl) : null };
+        try {
+            const resp = await fetch('/api/targeted', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            if (data.error) { showResult('targeted', `Ошибка: ${data.error}`, 'error'); return; }
+            let html = `<div class="result-card"><strong>🦠 ${data.pathogen}</strong><br>Чувствительные препараты (антибиотикограмма):<ul>`;
+            for (let r of data.recommendations) {
+                html += `<li><strong>${r.drug}</strong> — ${r.dose}<br><span class="badge">Коррекция при почечной недостаточности: ${r.renal_adjustment || "стандартно"}</span></li>`;
+            }
+            html += `</ul>`;
+            if (data.allergy_warnings && data.allergy_warnings.length) {
+                html += `<div class="warning">⚠️ ${data.allergy_warnings.join('; ')}</div>`;
+            }
+            html += `</div>`;
+            showResult('targeted', html, 'success');
+        } catch(e) { showResult('targeted', 'Ошибка сервера', 'error'); }
+    });
+
+    function showResult(tab, content, type) {
+        const container = tab === 'empiric' ? document.getElementById('resultEmpiric') : document.getElementById('resultTargeted');
+        if (type === 'error') container.innerHTML = `<div class="result-card error">❌ ${content}</div>`;
+        else container.innerHTML = content;
+    }
+
+    // Кнопка копирования результата
+    document.getElementById('copyResultBtn').addEventListener('click', () => {
+        navigator.clipboard.writeText(currentResultText).then(() => {
+            alert("Результат скопирован в буфер обмена");
+        }).catch(() => {
+            alert("Не удалось скопировать");
+        });
+    });
+</script>
+</body>
+</html>
