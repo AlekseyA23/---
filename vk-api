@@ -1,0 +1,28 @@
+import vk_api
+from vk_api.longpoll import VkLongPoll, VkEventType
+import os
+
+# Токен вашего сообщества, который мы сохранили на Bothost
+VK_TOKEN = os.environ.get('VK_TOKEN')
+
+# Авторизуемся как сообщество
+vk_session = vk_api.VkApi(token=VK_TOKEN)
+longpoll = VkLongPoll(vk_session)
+vk = vk_session.get_api()
+
+# Функция для отправки сообщений
+def send_message(user_id, message):
+    vk.messages.send(user_id=user_id, message=message, random_id=0)
+
+print("Бот запущен и слушает сообщения...")
+
+# Основной цикл ожидания сообщений
+for event in longpoll.listen():
+    if event.type == VkEventType.MESSAGE_NEW and event.to_me:
+        request_text = event.text.lower()
+        user_id = event.user_id
+
+        # Здесь будет логика обработки сообщений от вашего Flask-бота
+        # Например, ответить на сообщение "привет"
+        if request_text == "привет":
+            send_message(user_id, "Привет! Я бот-помощник.")
